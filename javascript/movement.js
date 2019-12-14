@@ -1,4 +1,4 @@
-let player = new Player(startPos.x*cellwidth+cellwidth/2, startPos.y*cellheight+cellheight/2, 1/colnum*5, cellheight/10);
+let player = new Player(startPos.x*cellwidth+cellwidth/2, startPos.y*cellheight+cellheight/2, 1/colnum*5, cellheight/5);
 ctx.fillStyle = "red";
 let rays = [];
 let rayLength = 200;
@@ -30,11 +30,14 @@ function mainLoop(){
         if(player.angle >= 360)
             player.angle = 0;
     }
-    let canTurn = true;
+    let ray = new Ray(player.x, player.y);
+    ray.collidedPoints = [];
+    ray.turnTowards(player.x+Math.cos(toRadians(player.angle)), player.y-Math.sin(toRadians(player.angle)));
     lines.forEach((line)=>{
+        if(ray.intersects(line)){
+            ray.collidedPoints.push(ray.intersects(line));
+        }
         for(let t=0; t<1; t+=0.1){
-            if(intersects(player.x, player.y, player.r+1, line.p1.x + (line.p2.x-line.p1.x)*t, line.p1.y + (line.p2.y-line.p1.y)*t))
-                canTurn = false;
             if(intersects(player.x, player.y, player.r, line.p1.x + (line.p2.x-line.p1.x)*t, line.p1.y + (line.p2.y-line.p1.y)*t)){
                 if(player.up){
                     player.y += Math.sin(toRadians(player.angle))*player.speed;
@@ -47,8 +50,22 @@ function mainLoop(){
             }
         }
     });
-    player.canTurn = canTurn;
-    calculateRays();
+    let closestPoint;
+    let minDistance = 99999;
+    for(let i=0; i<ray.collidedPoints.length; i++){
+        if(distanceBetweenPoints(player, ray.collidedPoints[i])<minDistance){
+            minDistance = distanceBetweenPoints(player, ray.collidedPoints[i]);
+            closestPoint = ray.collidedPoints[i];
+        }
+    }
+    if(closestPoint){
+        ctx.beginPath();
+        ctx.arc(closestPoint.x, closestPoint.y, 10, 0, Math.PI*2);
+        ctx.stroke();
+    }
+    ctx.strokeStyle = "blue";
+    ray.draw();
+    
     window.requestAnimationFrame(mainLoop);
 }
 
@@ -93,20 +110,6 @@ function intersects(x, y, r, x1, y1){ //does a circle intersect with a line?
         return false;
     }
 }
-function calculateRays(){
-    ctx.beginPath();
-    rays = [];
-    for(let i=0; i<numberOfRays; i++){
-        rays[i] = [];
-        let rayX = player.x;
-        let rayY = player.y;
-        for(let j=0; j<rayLength; j++){
-            rays[i].push(new Point(rayX, rayY));
-            //if(intersects())
-            rayY -= Math.sin(toRadians(player.angle+(i-numberOfRays/2)));
-            rayX += Math.cos(toRadians(player.angle+(i-numberOfRays/2)));
-            ctx.lineTo(rays[i][j].x, rays[i][j].y);
-        }
-    }
-    ctx.stroke();
+function pointIsBetween(a,c,b){
+    return distanceBetweenPoints(a,c) + distanceBetweenPoints(c,b) - distanceBetweenPoints(a,b) <= 0;
 }

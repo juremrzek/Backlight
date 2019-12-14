@@ -2,16 +2,18 @@ let canvas = document.getElementById("canvas");
 canvas.width = 800;
 canvas.height = 800;
 let ctx = canvas.getContext("2d");
+let mazeColor = "cyan";
 
-const colnum = 25;
+const colnum = 10;
 const rownum = colnum;
 const cellwidth = canvas.width/colnum;
 const cellheight = canvas.height/rownum
 let startPos = new Position();
 let endPos = new Position();
 let grid = []; //2d array that stores info about cells in the grid.
-
 let stack = []; //with this we remember all points we've been to
+
+let lines = []; //to know where the lines are for later collisions
 
 //First we set all 
 for(let i=0; i<=rownum; i++){
@@ -26,17 +28,14 @@ for(let i=0; i<=rownum; i++){
         }
     }
 }
-ctx.strokeStyle = "red";
-
 startPos = randomEdgeCell();
 grid[startPos.x][startPos.y].visited = true;
 stack[0] = new Position(startPos.x, startPos.y);
 ctx.beginPath();
-ctx.rect(startPos.x*cellwidth, startPos.y*cellheight, cellwidth, cellheight);
+//ctx.rect(startPos.x*cellwidth, startPos.y*cellheight, cellwidth, cellheight);
 ctx.fill();
-ctx.beginPath();
-ctx.moveTo(startPos.x*cellwidth+cellwidth/2, startPos.y*cellheight+cellheight/2);
-someLoop: while(true){
+outerLoop: while(true){
+    //let mazeIsGenerated = false;
     while(true){
         let tempPos = new Position(stack[stack.length-1].x, stack[stack.length-1].y);
         let direction = Math.trunc(Math.random()*4);
@@ -53,34 +52,38 @@ someLoop: while(true){
             case 3:
                 tempPos.x = stack[stack.length-1].x-1;
                 break;
-            default:
-                console.log("this shouldn't happen");
-                break;
         }
         if(!hasEmptyNeighbour(stack[stack.length-1])){
-            console.log("infinite loop detected");
+            console.log("backtracking...");
             ctx.stroke();
             backtrack();
             if(stack.length <= 0){
-                break someLoop;
+                //mazeIsGenerated = true;
+                console.log("The maze has been generated");
+                break outerLoop;
             }
             ctx.moveTo(stack[stack.length-1].x*cellwidth+cellwidth/2, stack[stack.length-1].y*cellheight+cellheight/2);
         }
         if(tempPos.x>=0 && tempPos.y>=0 && tempPos.x<colnum && tempPos.y<rownum && !grid[tempPos.x][tempPos.y].visited){
             grid[tempPos.x][tempPos.y].visited = true;
-            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(stack[stack.length-1].x*cellwidth+cellwidth/2, stack[stack.length-1].y*cellheight+cellheight/2);
             stack.push(new Position(tempPos.x, tempPos.y));
-            //ctx.lineTo(stack[stack.length-1].x*cellwidth+cellwidth/2, stack[stack.length-1].y*cellheight+cellheight/2); //this line shows how cells are connected
-            setLines();
+            //ctx.lineTo(stack[stack.length-1].x*cellwidth+cellwidth/2, stack[stack.length-1].y*cellheight+cellheight/2); //just debug lines
+            ctx.stroke();
+            setLines(); //removes the walls between all connecting cells
             break;
         }
     }
 }
 endPos = randomEdgeCell();
+createAnOpening(startPos);
+createAnOpening(endPos);
 ctx.fillStyle = "orange";
 ctx.beginPath();
-ctx.rect(endPos.x*cellwidth, endPos.y*cellheight, cellwidth, cellheight);
+//ctx.rect(endPos.x*cellwidth, endPos.y*cellheight, cellwidth, cellheight);
 ctx.fill();
+calculateLines();
 
 function backtrack(){
     if(hasEmptyNeighbour(stack[stack.length-1])){;
@@ -89,12 +92,10 @@ function backtrack(){
     else{
         stack.pop();
         if(stack.length <= 0){
-            console.log("end the program");
             return;
         }
         backtrack();
     }
-    
 }
 function hasEmptyNeighbour(cell){
     if(cell.y-1>=0 && !grid[cell.x][cell.y-1].visited)
@@ -128,34 +129,26 @@ function setLines(){
         }
     }
 }
-
-
-//ctx.stroke();
-drawMaze("black", "green");
-function drawMaze(strokeColor, fillColor){
+function drawMaze(strokeColor){
     ctx.strokeStyle = strokeColor;
-    ctx.fillStyle = fillColor;
-    for(let i=0; i<grid.length; i++){
-        for(let j=0; j<grid[i].length; j++){
+    lines.forEach((line) => {
             ctx.beginPath();
-            ctx.moveTo(i*cellwidth,j*cellheight);
-            if(grid[i][j].hasLine[0])
-                ctx.lineTo((i+1)*cellwidth, j*cellheight);
-            else
-                ctx.moveTo((i+1)*cellwidth, j*cellheight);
-            if(grid[i][j].hasLine[1])
-                ctx.lineTo((i+1)*cellwidth, (j+1)*cellheight);
-            else
-                ctx.moveTo((i+1)*cellwidth, (j+1)*cellheight);
-            if(grid[i][j].hasLine[2])
-                ctx.lineTo(i*cellwidth, (j+1)*cellheight);
-            else
-                ctx.moveTo(i*cellwidth, (j+1)*cellheight);
-            if(grid[i][j].hasLine[3])
-                ctx.lineTo(i*cellwidth, j*cellheight);
-            else
-                ctx.moveTo(i*cellwidth, j*cellheight);
+            ctx.moveTo(line.p1.x, line.p1.y);
+            ctx.lineTo(line.p2.x, line.p2.y);
             ctx.stroke();
+    });
+}
+function calculateLines(){
+    for(let i=0; i<grid.length-1; i++){
+        for(let j=0; j<grid[i].length-1; j++){
+            if(grid[i][j].hasLine[0])
+                lines.push(new Line(new Point(i*cellwidth,j*cellheight),new Point((i+1)*cellwidth, j*cellheight)));
+            if(grid[i][j].hasLine[1])
+                lines.push(new Line(new Point((i+1)*cellwidth, j*cellheight),new Point((i+1)*cellwidth, (j+1)*cellheight)));
+            if(grid[i][j].hasLine[2])
+                lines.push(new Line(new Point((i+1)*cellwidth, (j+1)*cellheight),new Point(i*cellwidth, (j+1)*cellheight)));
+            if(grid[i][j].hasLine[3])
+                lines.push(new Line(new Point(i*cellwidth, (j+1)*cellheight),new Point(i*cellwidth, j*cellheight)));
         }
     }
 }
@@ -165,17 +158,27 @@ function randomEdgeCell(){
         case 0: //That means we start on top or on bottom
             pos.x = Math.trunc(Math.random()*2);
             pos.y = Math.trunc(Math.random()*rownum);
-            if(pos.x >= 1)
-                pos.x = rownum-1;
+            if(pos.x == 1)
+                pos.x = colnum-1;
             break;
         case 1: //That means we start on left or right
             pos.x = Math.trunc(Math.random()*colnum);
             pos.y = Math.trunc(Math.random()*2);
-            if(pos.y >= 1)
-                pos.y = colnum-1;
+            if(pos.y == 1)
+                pos.y = rownum-1;
             break;
     }
     return pos;
+}
+function createAnOpening(pos){ //????
+    if(pos.y == 0)
+        grid[pos.x][pos.y].hasLine[0] = false;
+    else if(pos.x == rownum-1)
+        grid[pos.x][pos.y].hasLine[1] = false;
+    else if(pos.y == colnum-1)
+        grid[pos.x][pos.y].hasLine[2] = false;
+    else if(pos.x == 0)
+        grid[pos.x][pos.y].hasLine[3] = false;
 }
 
 

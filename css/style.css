@@ -1,7 +1,11 @@
+body{
+    background: #a4a4a5;
+}
 #canvas{
     width: 800px;
     height: 800px;
     position: relative;
     left: 50%;
     transform: translate(-50%, 0);
+    background: rgb(207, 207, 207);
 }

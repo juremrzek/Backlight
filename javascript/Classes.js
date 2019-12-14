@@ -28,5 +28,6 @@ class Player{
         this.down = false;
         this.angle = 0;
         this.canMove = true;
+        this.canTurn = true;
     }
 }

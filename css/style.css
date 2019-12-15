@@ -1,5 +1,6 @@
 body{
-    background: #a4a4a5;
+    /*background: #a4a4a5;*/
+    background: black;
 }
 #canvas{
     width: 1200px;
@@ -7,5 +8,6 @@ body{
     position: relative;
     left: 50%;
     transform: translate(-50%, 0);
-    background: rgb(207, 207, 207);
+    /*background: rgb(207, 207, 207);*/
+    background: black;
 }

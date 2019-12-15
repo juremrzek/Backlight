@@ -63,15 +63,23 @@ function mainLoop(){
             ray[i].closestPoint = closestPoint;
         }
     }
+    //Draw everything
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawFirstPerson();
-    ctx.fillStyle="#8A2BE2";
     ctx.beginPath();
-    ctx.rect(0, 0, canvas.height/2, canvas.height/2);
-    ctx.fill();
-    drawMaze("black");
+    
+    let gradient = ctx.createLinearGradient(0, canvas.height/2, 0, canvas.height*2);
+    gradient.addColorStop(0, "black");
+    gradient.addColorStop(1, "yellow");
+    // Fill with gradient
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, canvas.height/2, canvas.width, canvas.height/2);
+
+
+
+    drawFirstPerson(mazeColor);
+    drawMaze(mazeColor, "black");
     drawPlayer("white");
-    drawRays("black");
+    drawRays("yellow");
     window.requestAnimationFrame(mainLoop);
 }
 
@@ -79,24 +87,24 @@ function mainLoop(){
 window.addEventListener("keydown", (event) => {
     key = event.keyCode;
     //console.log(key);
-    if(key == 87)
+    if(key == 87 || key == 38)
         player.up = true;
-    if(key == 83)
+    if(key == 83 || key == 40)
         player.down = true;
-    if(key == 39)
+    if(key == 39 || key == 68)
         player.right = true;
-    if(key == 37)
+    if(key == 37 || key == 65)
         player.left = true;
 });
 window.addEventListener("keyup", (event)=>{
     key = event.keyCode;
-    if(key == 87)
+    if(key == 87 || key == 38)
         player.up = false;
-    if(key == 83)
+    if(key == 83 || key == 40)
         player.down = false;
-    if(key == 39)
+    if(key == 39 || key == 68)
         player.right = false;
-    if(key == 37)
+    if(key == 37 || key == 65)
         player.left = false;
     //if(key == )
 });
@@ -116,20 +124,22 @@ function intersects(x, y, r, x1, y1){ //does a circle intersect with a point?
         return false;
     }
 }
-function drawFirstPerson(){
-    ctx.fillStyle = "purple";
+function drawFirstPerson(color){
     for(let i=0; i<numberOfRays; i++){
+        let shade = 255/distanceBetweenPoints(player, ray[i].closestPoint)*15;
+        red = "rgb("+shade+", "+shade+", 0)";
+        ctx.fillStyle = red;
         ctx.beginPath();
         let screenSize = 100/distanceBetweenPoints(player, ray[i].closestPoint)*100;
-        ctx.rect(canvas.width-(1200/numberOfRays)*(i+1), 300-(screenSize/2), 1200/numberOfRays, screenSize);
+        ctx.rect(canvas.width-(1200/numberOfRays)*(i+1), 400-(screenSize/2), 1200/numberOfRays, screenSize);
         ctx.fill();
     }
 }
 function drawPlayer(color){
     ctx.beginPath();
-    ctx.fillStyle=color;
+    ctx.strokeStyle=color;
     ctx.arc(player.x, player.y, player.r, 0, 2*Math.PI);
-    ctx.fill();
+    ctx.stroke();
 }
 function drawRays(color){
     for(let i=0; i<numberOfRays; i++){

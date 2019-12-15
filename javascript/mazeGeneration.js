@@ -2,7 +2,7 @@ let canvas = document.getElementById("canvas");
 canvas.width = 1200;
 canvas.height = 800;
 let ctx = canvas.getContext("2d");
-let mazeColor = "cyan";
+let mazeColor = "white";
 
 const colnum = 10;
 const rownum = colnum;
@@ -79,10 +79,6 @@ outerLoop: while(true){
 endPos = randomEdgeCell();
 //createAnOpening(startPos);
 //createAnOpening(endPos);
-ctx.fillStyle = "orange";
-ctx.beginPath();
-//ctx.rect(endPos.x*cellwidth, endPos.y*cellheight, cellwidth, cellheight);
-ctx.fill();
 calculateLines();
 
 function backtrack(){
@@ -129,7 +125,11 @@ function setLines(){
         }
     }
 }
-function drawMaze(strokeColor){
+function drawMaze(strokeColor, fillcolor){
+    ctx.fillStyle=fillcolor;
+    ctx.beginPath();
+    ctx.rect(0, 0, canvas.height/2, canvas.height/2);
+    ctx.fill();
     ctx.strokeStyle = strokeColor;
     lines.forEach((line) => {
             ctx.beginPath();

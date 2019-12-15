@@ -1,19 +1,15 @@
 let player = new Player(startPos.x*cellwidth+cellwidth/2, startPos.y*cellheight+cellheight/2, 1/colnum*5, cellheight/5);
 ctx.fillStyle = "red";
-let rays = [];
+let ray = [];
 let rayLength = 200;
 let numberOfRays = 60;
+for(let i=0; i<numberOfRays; i++){
+    let tempray = new Ray(player.x, player.y);
+    tempray.collidedPoints = [];
+    ray.push(tempray);
+}
 mainLoop();
 function mainLoop(){
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawMaze("black");
-    ctx.beginPath();
-    ctx.arc(player.x, player.y, player.r, 0, 2*Math.PI);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(player.x, player.y);
-    ctx.lineTo(player.x + Math.cos(toRadians(player.angle))*player.r, player.y - Math.sin(toRadians(player.angle))*player.r);
-    ctx.stroke();
     if(player.up){
     player.y -= Math.sin(toRadians(player.angle))*player.speed;
     player.x += Math.cos(toRadians(player.angle))*player.speed;
@@ -30,12 +26,16 @@ function mainLoop(){
         if(player.angle >= 360)
             player.angle = 0;
     }
-    let ray = new Ray(player.x, player.y);
-    ray.collidedPoints = [];
-    ray.turnTowards(player.x+Math.cos(toRadians(player.angle)), player.y-Math.sin(toRadians(player.angle)));
+    for(let i=0; i<numberOfRays; i++){
+        ray[i].position = new Point(player.x, player.y);
+        ray[i].collidedPoints = [];
+        ray[i].turnTowards(player.x+Math.cos(toRadians(player.angle+(i-numberOfRays/2))), player.y-Math.sin(toRadians(player.angle+(i-numberOfRays/2))));
+    }
     lines.forEach((line)=>{
-        if(ray.intersects(line)){
-            ray.collidedPoints.push(ray.intersects(line));
+        for(let i=0; i<numberOfRays; i++){
+            if(ray[i].intersects(line)){
+                ray[i].collidedPoints.push(ray[i].intersects(line));
+            }
         }
         for(let t=0; t<1; t+=0.1){
             if(intersects(player.x, player.y, player.r, line.p1.x + (line.p2.x-line.p1.x)*t, line.p1.y + (line.p2.y-line.p1.y)*t)){
@@ -50,22 +50,28 @@ function mainLoop(){
             }
         }
     });
-    let closestPoint;
-    let minDistance = 99999;
-    for(let i=0; i<ray.collidedPoints.length; i++){
-        if(distanceBetweenPoints(player, ray.collidedPoints[i])<minDistance){
-            minDistance = distanceBetweenPoints(player, ray.collidedPoints[i]);
-            closestPoint = ray.collidedPoints[i];
+    for(let i=0; i<numberOfRays; i++){
+        let closestPoint;
+        let minDistance = 99999;
+        for(let j=0; j<ray[i].collidedPoints.length; j++){
+            if(distanceBetweenPoints(player, ray[i].collidedPoints[j])<minDistance){
+                minDistance = distanceBetweenPoints(player, ray[i].collidedPoints[j]);
+                closestPoint = ray[i].collidedPoints[j];
+            }
+        }
+        if(closestPoint){
+            ray[i].closestPoint = closestPoint;
         }
     }
-    if(closestPoint){
-        ctx.beginPath();
-        ctx.arc(closestPoint.x, closestPoint.y, 10, 0, Math.PI*2);
-        ctx.stroke();
-    }
-    ctx.strokeStyle = "blue";
-    ray.draw();
-    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawFirstPerson();
+    ctx.fillStyle="#8A2BE2";
+    ctx.beginPath();
+    ctx.rect(0, 0, canvas.height/2, canvas.height/2);
+    ctx.fill();
+    drawMaze("black");
+    drawPlayer("white");
+    drawRays("black");
     window.requestAnimationFrame(mainLoop);
 }
 
@@ -102,7 +108,7 @@ function distanceBetweenPoints(p1, p2){
     let y = Math.abs(p1.y - p2.y);
     return Math.trunc(Math.sqrt(Math.pow(x,2) + Math.pow(y,2)));
 }
-function intersects(x, y, r, x1, y1){ //does a circle intersect with a line?
+function intersects(x, y, r, x1, y1){ //does a circle intersect with a point?
     if(distanceBetweenPoints(new Point(x, y), new Point(x1, y1)) <= r){
         return true;
     }
@@ -110,6 +116,27 @@ function intersects(x, y, r, x1, y1){ //does a circle intersect with a line?
         return false;
     }
 }
-function pointIsBetween(a,c,b){
-    return distanceBetweenPoints(a,c) + distanceBetweenPoints(c,b) - distanceBetweenPoints(a,b) <= 0;
+function drawFirstPerson(){
+    ctx.fillStyle = "purple";
+    for(let i=0; i<numberOfRays; i++){
+        ctx.beginPath();
+        let screenSize = 100/distanceBetweenPoints(player, ray[i].closestPoint)*100;
+        ctx.rect(canvas.width-(1200/numberOfRays)*(i+1), 300-(screenSize/2), 1200/numberOfRays, screenSize);
+        ctx.fill();
+    }
+}
+function drawPlayer(color){
+    ctx.beginPath();
+    ctx.fillStyle=color;
+    ctx.arc(player.x, player.y, player.r, 0, 2*Math.PI);
+    ctx.fill();
+}
+function drawRays(color){
+    for(let i=0; i<numberOfRays; i++){
+        ctx.strokeStyle=color;
+        ctx.beginPath();
+        ctx.moveTo(player.x, player.y);
+        ctx.lineTo(ray[i].closestPoint.x, ray[i].closestPoint.y);
+        ctx.stroke();
+    }
 }

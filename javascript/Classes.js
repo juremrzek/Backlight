@@ -35,6 +35,8 @@ class Ray{
     constructor(x1, y1){
         this.position = new Point(x1, y1);
         this.direction = new Point(1, 1); //this is a direction of a vector
+        this.collidedPoints = [];
+        this.closestPoint;
     }
     draw(){
         ctx.beginPath();

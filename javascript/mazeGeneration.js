@@ -1,13 +1,13 @@
 let canvas = document.getElementById("canvas");
-canvas.width = 800;
+canvas.width = 1200;
 canvas.height = 800;
 let ctx = canvas.getContext("2d");
 let mazeColor = "cyan";
 
 const colnum = 10;
 const rownum = colnum;
-const cellwidth = canvas.width/colnum;
-const cellheight = canvas.height/rownum
+const cellwidth = canvas.height/colnum/2;
+const cellheight = canvas.height/colnum/2;
 let startPos = new Position();
 let endPos = new Position();
 let grid = []; //2d array that stores info about cells in the grid.
@@ -77,8 +77,8 @@ outerLoop: while(true){
     }
 }
 endPos = randomEdgeCell();
-createAnOpening(startPos);
-createAnOpening(endPos);
+//createAnOpening(startPos);
+//createAnOpening(endPos);
 ctx.fillStyle = "orange";
 ctx.beginPath();
 //ctx.rect(endPos.x*cellwidth, endPos.y*cellheight, cellwidth, cellheight);

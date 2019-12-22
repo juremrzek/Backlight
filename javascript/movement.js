@@ -1,35 +1,62 @@
-let player = new Player(startPos.x*cellwidth+cellwidth/2, startPos.y*cellheight+cellheight/2, 1/colnum*5, cellheight/5);
+const player = new Player(startPos.x*cellwidth+cellwidth/2, startPos.y*cellheight+cellheight/2, 1/colnum*4, cellheight/5);
+/*const enemy = new Enemy(100,100);
+enemy.setImg("img/frame-1.png");*/
 ctx.fillStyle = "red";
 let ray = [];
-let rayLength = 200;
-let numberOfRays = 60;
+const numberOfRays = 80;
+let mouseDirection = "";
+let mousePosition = new Point();
 for(let i=0; i<numberOfRays; i++){
-    let tempray = new Ray(player.x, player.y);
-    tempray.collidedPoints = [];
-    ray.push(tempray);
+    let tempRay = new Ray(player.x, player.y);
+    tempRay.collidedPoints = [];
+    ray.push(tempRay);
 }
+let previousPlayerPoint = new Point(player.x, player.y);
+
 mainLoop();
 function mainLoop(){
+    player.direction.x = 0;
+    player.direction.y = 0;
+    let tempLine = new Line();
+    lines.forEach((line)=>{
+        let distance = player.distanceFrom(line);
+        if(distance < player.r){
+            tempLine = line;
+        }
+    });
+    
+    if(player.turnLeft)
+        player.angle -= 2;
+    if(player.turnRight)
+        player.angle += 2;
+    if(player.angle >= 360)
+        player.angle = 0;
+
     if(player.up){
-    player.y -= Math.sin(toRadians(player.angle))*player.speed;
-    player.x += Math.cos(toRadians(player.angle))*player.speed;
+        player.direction.y += -Math.sin(toRadians(player.angle));
+        player.direction.x += Math.cos(toRadians(player.angle));
     }
     if(player.down){
-        player.y += Math.sin(toRadians(player.angle))*player.speed;
-        player.x -= Math.cos( toRadians(player.angle))*player.speed;
+        player.direction.y += Math.sin(toRadians(player.angle));
+        player.direction.x += -Math.cos(toRadians(player.angle));
     }
-    if(player.canTurn){
-        if(player.left)
-            player.angle += 2;
-        if(player.right)
-            player.angle -= 2;
-        if(player.angle >= 360)
-            player.angle = 0;
+    if(player.left){
+        player.direction.y += -Math.sin(toRadians(player.angle+90));
+        player.direction.x += Math.cos(toRadians(player.angle+90));
     }
+    if(player.right){
+        player.direction.y += Math.sin(toRadians(player.angle+90));
+        player.direction.x += -Math.cos(toRadians(player.angle+90));
+    }
+    if(player.direction.y < -1)
+        player.direction.y += 1;
+    if(player.direction.y > 1)
+        player.direction.y -= 1;
+
+
     for(let i=0; i<numberOfRays; i++){
         ray[i].position = new Point(player.x, player.y);
         ray[i].collidedPoints = [];
-        ray[i].turnTowards(player.x+Math.cos(toRadians(player.angle+(i-numberOfRays/2))), player.y-Math.sin(toRadians(player.angle+(i-numberOfRays/2))));
     }
     lines.forEach((line)=>{
         for(let i=0; i<numberOfRays; i++){
@@ -37,49 +64,54 @@ function mainLoop(){
                 ray[i].collidedPoints.push(ray[i].intersects(line));
             }
         }
-        for(let t=0; t<1; t+=0.1){
-            if(intersects(player.x, player.y, player.r, line.p1.x + (line.p2.x-line.p1.x)*t, line.p1.y + (line.p2.y-line.p1.y)*t)){
-                if(player.up){
-                    player.y += Math.sin(toRadians(player.angle))*player.speed;
-                    player.x -= Math.cos(toRadians(player.angle))*player.speed;
-                }
-                else{
-                    player.y -= Math.sin(toRadians(player.angle))*player.speed;
-                    player.x += Math.cos(toRadians(player.angle))*player.speed;
-                }
-            }
-        }
     });
     for(let i=0; i<numberOfRays; i++){
-        let closestPoint;
-        let minDistance = 99999;
-        for(let j=0; j<ray[i].collidedPoints.length; j++){
-            if(distanceBetweenPoints(player, ray[i].collidedPoints[j])<minDistance){
-                minDistance = distanceBetweenPoints(player, ray[i].collidedPoints[j]);
-                closestPoint = ray[i].collidedPoints[j];
-            }
+        if(ray[i].collidedPoints.length > 0){
+            const points = ray[i].collidedPoints.map(e => ({point:e, distance:distanceBetweenPoints(player, e)}))
+            const sortedPoints = points.sort((a,b) => a.distance - b.distance)
+            ray[i].closestPoint = sortedPoints[0].point;
         }
-        if(closestPoint){
-            ray[i].closestPoint = closestPoint;
-        }
+        ray[i].turnTowards(player.x+Math.cos(toRadians(player.angle+(i-numberOfRays/2))), player.y-Math.sin(toRadians(player.angle+(i-numberOfRays/2))));
     }
+    if(!tempLine.p1){
+        previousPlayerPoint.x = player.x;
+        previousPlayerPoint.y = player.y;
+    }
+    player.x = previousPlayerPoint.x;
+    player.y = previousPlayerPoint.y;
+
+    player.x += player.direction.x*player.speed;
+    player.y += player.direction.y*player.speed;
+    
+
     //Draw everything
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.beginPath();
     
+    //Create a floor gradient
     let gradient = ctx.createLinearGradient(0, canvas.height/2, 0, canvas.height*2);
     gradient.addColorStop(0, "black");
     gradient.addColorStop(1, "yellow");
-    // Fill with gradient
     ctx.fillStyle = gradient;
     ctx.fillRect(0, canvas.height/2, canvas.width, canvas.height/2);
-
-
 
     drawFirstPerson(mazeColor);
     drawMaze(mazeColor, "black");
     drawPlayer("white");
     drawRays("yellow");
+
+    /*ctx.drawImage(enemy.img, enemy.x, enemy.y);
+    if(enemy.time > 100){
+        enemy.time = 0;
+        if(enemy.imgsrc == "img/frame-1.png")
+            enemy.setImg("img/frame-2.png");
+        else
+            enemy.setImg("img/frame-1.png");
+    }
+    else
+        enemy.time++;*/
+
+
     window.requestAnimationFrame(mainLoop);
 }
 
@@ -91,10 +123,14 @@ window.addEventListener("keydown", (event) => {
         player.up = true;
     if(key == 83 || key == 40)
         player.down = true;
-    if(key == 39 || key == 68)
+    if(key == 68)
         player.right = true;
-    if(key == 37 || key == 65)
+    if(key == 65)
         player.left = true;
+    if(key == 39)
+        player.turnLeft = true;
+    if(key == 37)
+        player.turnRight = true;
 });
 window.addEventListener("keyup", (event)=>{
     key = event.keyCode;
@@ -102,38 +138,40 @@ window.addEventListener("keyup", (event)=>{
         player.up = false;
     if(key == 83 || key == 40)
         player.down = false;
-    if(key == 39 || key == 68)
+    if(key == 68)
         player.right = false;
-    if(key == 37 || key == 65)
+    if(key == 65)
         player.left = false;
-    //if(key == )
+    if(key == 39)
+        player.turnLeft = false;
+    if(key == 37)
+        player.turnRight = false;
 });
+
+
 function toRadians(degrees){
   return degrees * (Math.PI/180);
+}
+function toDegrees(radians){
+  return radians * (180/Math.PI);
 }
 function distanceBetweenPoints(p1, p2){
     let x = Math.abs(p1.x - p2.x);
     let y = Math.abs(p1.y - p2.y);
     return Math.trunc(Math.sqrt(Math.pow(x,2) + Math.pow(y,2)));
 }
-function intersects(x, y, r, x1, y1){ //does a circle intersect with a point?
-    if(distanceBetweenPoints(new Point(x, y), new Point(x1, y1)) <= r){
-        return true;
-    }
-    else{
-        return false;
-    }
-}
 function drawFirstPerson(color){
     for(let i=0; i<numberOfRays; i++){
-        let shade = 255/distanceBetweenPoints(player, ray[i].closestPoint)*15;
-        red = "rgb("+shade+", "+shade+", 0)";
-        ctx.fillStyle = red;
+        distance = distanceBetweenPoints(player, ray[i].closestPoint);
+        let shade = 200/distance*20;
+        color = "rgb("+shade+", "+shade+", 0)";
+        ctx.fillStyle = color;
         ctx.beginPath();
-        let screenSize = 100/distanceBetweenPoints(player, ray[i].closestPoint)*100;
+        let screenSize = 10000/distance;
         ctx.rect(canvas.width-(1200/numberOfRays)*(i+1), 400-(screenSize/2), 1200/numberOfRays, screenSize);
         ctx.fill();
     }
+                   
 }
 function drawPlayer(color){
     ctx.beginPath();

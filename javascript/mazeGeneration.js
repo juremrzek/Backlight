@@ -1,10 +1,10 @@
-let canvas = document.getElementById("canvas");
+const canvas = document.getElementById("canvas");
 canvas.width = 1200;
 canvas.height = 800;
-let ctx = canvas.getContext("2d");
-let mazeColor = "white";
+const ctx = canvas.getContext("2d");
+const mazeColor = "white";
 
-const colnum = 10;
+const colnum = 12;
 const rownum = colnum;
 const cellwidth = canvas.height/colnum/2;
 const cellheight = canvas.height/colnum/2;
@@ -34,45 +34,49 @@ stack[0] = new Position(startPos.x, startPos.y);
 ctx.beginPath();
 //ctx.rect(startPos.x*cellwidth, startPos.y*cellheight, cellwidth, cellheight);
 ctx.fill();
-outerLoop: while(true){
-    //let mazeIsGenerated = false;
-    while(true){
-        let tempPos = new Position(stack[stack.length-1].x, stack[stack.length-1].y);
-        let direction = Math.trunc(Math.random()*4);
-        switch(direction){
-            case 0:
-                tempPos.y = stack[stack.length-1].y-1;
-                break;
-            case 1:
-                tempPos.x = stack[stack.length-1].x+1;
-                break;
-            case 2:
-                tempPos.y = stack[stack.length-1].y+1;
-                break;
-            case 3:
-                tempPos.x = stack[stack.length-1].x-1;
-                break;
-        }
-        if(!hasEmptyNeighbour(stack[stack.length-1])){
-            console.log("backtracking...");
-            ctx.stroke();
-            backtrack();
-            if(stack.length <= 0){
-                //mazeIsGenerated = true;
-                console.log("The maze has been generated");
-                break outerLoop;
+generateMaze();
+//generateMaze
+function generateMaze(){
+    outerLoop: while(true){
+        //let mazeIsGenerated = false;
+        while(true){
+            let tempPos = new Position(stack[stack.length-1].x, stack[stack.length-1].y);
+            let direction = Math.trunc(Math.random()*4);
+            switch(direction){
+                case 0:
+                    tempPos.y = stack[stack.length-1].y-1;
+                    break;
+                case 1:
+                    tempPos.x = stack[stack.length-1].x+1;
+                    break;
+                case 2:
+                    tempPos.y = stack[stack.length-1].y+1;
+                    break;
+                case 3:
+                    tempPos.x = stack[stack.length-1].x-1;
+                    break;
             }
-            ctx.moveTo(stack[stack.length-1].x*cellwidth+cellwidth/2, stack[stack.length-1].y*cellheight+cellheight/2);
-        }
-        if(tempPos.x>=0 && tempPos.y>=0 && tempPos.x<colnum && tempPos.y<rownum && !grid[tempPos.x][tempPos.y].visited){
-            grid[tempPos.x][tempPos.y].visited = true;
-            ctx.beginPath();
-            ctx.moveTo(stack[stack.length-1].x*cellwidth+cellwidth/2, stack[stack.length-1].y*cellheight+cellheight/2);
-            stack.push(new Position(tempPos.x, tempPos.y));
-            //ctx.lineTo(stack[stack.length-1].x*cellwidth+cellwidth/2, stack[stack.length-1].y*cellheight+cellheight/2); //just debug lines
-            ctx.stroke();
-            setLines(); //removes the walls between all connecting cells
-            break;
+            if(!hasEmptyNeighbour(stack[stack.length-1])){
+                console.log("backtracking...");
+                ctx.stroke();
+                backtrack();
+                if(stack.length <= 0){
+                    //mazeIsGenerated = true;
+                    console.log("The maze has been generated");
+                    break outerLoop;
+                }
+                ctx.moveTo(stack[stack.length-1].x*cellwidth+cellwidth/2, stack[stack.length-1].y*cellheight+cellheight/2);
+            }
+            if(tempPos.x>=0 && tempPos.y>=0 && tempPos.x<colnum && tempPos.y<rownum && !grid[tempPos.x][tempPos.y].visited){
+                grid[tempPos.x][tempPos.y].visited = true;
+                ctx.beginPath();
+                ctx.moveTo(stack[stack.length-1].x*cellwidth+cellwidth/2, stack[stack.length-1].y*cellheight+cellheight/2);
+                stack.push(new Position(tempPos.x, tempPos.y));
+                //ctx.lineTo(stack[stack.length-1].x*cellwidth+cellwidth/2, stack[stack.length-1].y*cellheight+cellheight/2); //just debug lines
+                ctx.stroke();
+                setLines(); //removes the walls between all connecting cells
+                break;
+            }
         }
     }
 }

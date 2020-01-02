@@ -31,11 +31,7 @@ for(let i=0; i<=rownum; i++){
 startPos = randomEdgeCell();
 grid[startPos.x][startPos.y].visited = true;
 stack[0] = new Position(startPos.x, startPos.y);
-ctx.beginPath();
-//ctx.rect(startPos.x*cellwidth, startPos.y*cellheight, cellwidth, cellheight);
-ctx.fill();
 generateMaze();
-//generateMaze
 function generateMaze(){
     outerLoop: while(true){
         //let mazeIsGenerated = false;
@@ -81,8 +77,7 @@ function generateMaze(){
     }
 }
 endPos = randomEdgeCell();
-//createAnOpening(startPos);
-//createAnOpening(endPos);
+createAnOpening(endPos);
 calculateLines();
 
 function backtrack(){
@@ -134,15 +129,17 @@ function drawMaze(strokeColor, fillcolor){
     ctx.beginPath();
     ctx.rect(0, 0, canvas.height/2, canvas.height/2);
     ctx.fill();
-    ctx.strokeStyle = strokeColor;
-    lines.forEach((line) => {
-            ctx.beginPath();
-            ctx.moveTo(line.p1.x, line.p1.y);
-            ctx.lineTo(line.p2.x, line.p2.y);
-            ctx.stroke();
-    });
+    if(lightsOn){
+        ctx.strokeStyle = strokeColor;
+        lines.forEach((line) => {
+                ctx.beginPath();
+                ctx.moveTo(line.p1.x, line.p1.y);
+                ctx.lineTo(line.p2.x, line.p2.y);
+                ctx.stroke();
+        });
+    }
 }
-function calculateLines(){
+function calculateLines(pos){
     for(let i=0; i<grid.length-1; i++){
         for(let j=0; j<grid[i].length-1; j++){
             if(grid[i][j].hasLine[0])
@@ -175,14 +172,23 @@ function randomEdgeCell(){
     return pos;
 }
 function createAnOpening(pos){ //????
-    if(pos.y == 0)
+    if(pos.y == 0){
         grid[pos.x][pos.y].hasLine[0] = false;
-    else if(pos.x == rownum-1)
+        lines.push(new Line(new Point(pos.x*cellwidth,pos.y*cellheight),new Point((pos.x+1)*cellwidth, pos.y*cellheight)));
+    }
+    else if(pos.x == rownum-1){
         grid[pos.x][pos.y].hasLine[1] = false;
-    else if(pos.y == colnum-1)
+        lines.push(new Line(new Point((pos.x+1)*cellwidth, pos.y*cellheight),new Point((pos.x+1)*cellwidth, (pos.y+1)*cellheight)));
+    }
+    else if(pos.y == colnum-1){
         grid[pos.x][pos.y].hasLine[2] = false;
-    else if(pos.x == 0)
+        lines.push(new Line(new Point((pos.x+1)*cellwidth, (pos.y+1)*cellheight),new Point(pos.x*cellwidth, (pos.y+1)*cellheight)));
+    }
+    else if(pos.x == 0){
+        lines.push(new Line(new Point(pos.x*cellwidth, (pos.y+1)*cellheight),new Point(pos.x*cellwidth, pos.y*cellheight)));
         grid[pos.x][pos.y].hasLine[3] = false;
+    }
+    lines[lines.length-1].type = "endpoint";
 }
 
 

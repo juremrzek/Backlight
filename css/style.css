@@ -10,4 +10,6 @@ body{
     transform: translate(-50%, 0);
     /*background: rgb(207, 207, 207);*/
     background: black;
+    background-image: url("../img/wallpaper.jpg");
+    
 }

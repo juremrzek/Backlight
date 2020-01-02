@@ -1,17 +1,20 @@
-const player = new Player(startPos.x*cellwidth+cellwidth/2, startPos.y*cellheight+cellheight/2, 1/colnum*4, cellheight/5);
-/*const enemy = new Enemy(100,100);
-enemy.setImg("img/frame-1.png");*/
+const player = new Player(startPos.x*cellwidth+cellwidth/2, startPos.y*cellheight+cellheight/2, 1/colnum*4, cellheight/6);
+//const enemy = new Enemy(cellwidth/2,cellheight/2,cellheight/4);
+//enemy.setImg("img/frame-1.png");
 ctx.fillStyle = "red";
 let ray = [];
 const numberOfRays = 80;
 let mouseDirection = "";
 let mousePosition = new Point();
+let lightsOn = true;
 for(let i=0; i<numberOfRays; i++){
     let tempRay = new Ray(player.x, player.y);
     tempRay.collidedPoints = [];
     ray.push(tempRay);
 }
 let previousPlayerPoint = new Point(player.x, player.y);
+
+//lines.push(new Line(new Point(enemy.x-1, enemy.y-1), new Point(enemy.x, enemy.y)));
 
 mainLoop();
 function mainLoop(){
@@ -62,6 +65,9 @@ function mainLoop(){
         for(let i=0; i<numberOfRays; i++){
             if(ray[i].intersects(line)){
                 ray[i].collidedPoints.push(ray[i].intersects(line));
+                if(line.type == "endpoint"){
+                    ray[i].collidedPoints[ray[i].collidedPoints.length-1].type = "endpoint";
+                }
             }
         }
     });
@@ -92,25 +98,31 @@ function mainLoop(){
     let gradient = ctx.createLinearGradient(0, canvas.height/2, 0, canvas.height*2);
     gradient.addColorStop(0, "black");
     gradient.addColorStop(1, "yellow");
-    ctx.fillStyle = gradient;
+    if(lightsOn)
+        ctx.fillStyle = gradient;
+    else
+        ctx.fillStyle = "black";
     ctx.fillRect(0, canvas.height/2, canvas.width, canvas.height/2);
 
     drawFirstPerson(mazeColor);
     drawMaze(mazeColor, "black");
+
+    ctx.beginPath();
+    ctx.fillStyle = "green";
+    ctx.rect(endPos.x*cellwidth, endPos.y*cellheight, cellwidth, cellheight);
+    ctx.fill();
+
     drawPlayer("white");
-    drawRays("yellow");
+    if(lightsOn)
+        drawRays("yellow");
 
-    /*ctx.drawImage(enemy.img, enemy.x, enemy.y);
-    if(enemy.time > 100){
-        enemy.time = 0;
-        if(enemy.imgsrc == "img/frame-1.png")
-            enemy.setImg("img/frame-2.png");
-        else
-            enemy.setImg("img/frame-1.png");
-    }
-    else
-        enemy.time++;*/
-
+    //Draw a hand with flashlight
+    let flashlight = new Image();
+    flashlight.src = "img/flashlight.png";
+    flashlight.width = flashlight.naturalWidth*1.3;
+    flashlight.height = flashlight.naturalHeight*1.3;
+    if(lightsOn)
+        ctx.drawImage(flashlight, canvas.width-flashlight.width, canvas.height - flashlight.height, flashlight.width, flashlight.height);
 
     window.requestAnimationFrame(mainLoop);
 }
@@ -131,6 +143,10 @@ window.addEventListener("keydown", (event) => {
         player.turnLeft = true;
     if(key == 37)
         player.turnRight = true;
+    if(key == 70){
+        lightsOn = !lightsOn;
+    }
+    
 });
 window.addEventListener("keyup", (event)=>{
     key = event.keyCode;
@@ -163,15 +179,37 @@ function distanceBetweenPoints(p1, p2){
 function drawFirstPerson(color){
     for(let i=0; i<numberOfRays; i++){
         distance = distanceBetweenPoints(player, ray[i].closestPoint);
-        let shade = 200/distance*20;
-        color = "rgb("+shade+", "+shade+", 0)";
+        let shade = 200/distance*10;
+        if(ray[i].closestPoint.type == "endpoint"){
+            color = "rgb("+"0"+", "+shade+", 0)";
+        }
+        else{
+            color = "rgb("+shade+", "+shade+", 0)";
+            //if(shade<=30)
+                //color = "rgb("+shade+", "+shade+", "+shade+")"
+        }
+        if(!lightsOn)
+            color = "black"
         ctx.fillStyle = color;
         ctx.beginPath();
-        let screenSize = 10000/distance;
-        ctx.rect(canvas.width-(1200/numberOfRays)*(i+1), 400-(screenSize/2), 1200/numberOfRays, screenSize);
+        let wallSize = 10000/distance;
+        let wallWidth = 1200/numberOfRays;
+        ctx.rect(canvas.width-(1200/numberOfRays)*(i+1), 400-(wallSize/2), wallWidth, wallSize);
         ctx.fill();
-    }
-                   
+
+        /*wallWidth = wallSize/1.16;
+        ctx.drawImage(enemy.img, canvas.width-(1200/numberOfRays)*(i+1)-wallWidth/2, 400-(wallSize/2), wallWidth, wallSize);
+        if(enemy.time > 100){
+            enemy.time = 0;
+            if(enemy.imgsrc == "img/frame-1.png")
+                enemy.setImg("img/frame-2.png");
+                
+            else
+                enemy.setImg("img/frame-1.png");
+        }
+        //else
+          //  enemy.time++;*/
+    }              
 }
 function drawPlayer(color){
     ctx.beginPath();

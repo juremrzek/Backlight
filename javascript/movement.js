@@ -1,11 +1,7 @@
 const player = new Player(startPos.x*cellwidth+cellwidth/2, startPos.y*cellheight+cellheight/2, 1/colnum*4, cellheight/6);
-//const enemy = new Enemy(cellwidth/2,cellheight/2,cellheight/4);
-//enemy.setImg("img/frame-1.png");
 ctx.fillStyle = "red";
 let ray = [];
 const numberOfRays = 80;
-let mouseDirection = "";
-let mousePosition = new Point();
 let lightsOn = true;
 for(let i=0; i<numberOfRays; i++){
     let tempRay = new Ray(player.x, player.y);
@@ -14,7 +10,13 @@ for(let i=0; i<numberOfRays; i++){
 }
 let previousPlayerPoint = new Point(player.x, player.y);
 
-//lines.push(new Line(new Point(enemy.x-1, enemy.y-1), new Point(enemy.x, enemy.y)));
+const enemy = new Enemy(cellwidth/2,cellheight/2,cellheight/4);
+const enemy2 = new Enemy(cellwidth/2*5,cellheight/2*5,cellheight/4);
+enemy.setImg("img/frame-1.png");
+lines.push(new Line(new Point(enemy.x-1, enemy.y-1), new Point(enemy.x, enemy.y)));
+lines.push(new Line(new Point(enemy2.x-1, enemy2.y-1), new Point(enemy2.x, enemy2.y)));
+lines[lines.length-2].isEnemy = true;
+lines[lines.length-1].isEnemy = true;
 
 mainLoop();
 function mainLoop(){
@@ -65,8 +67,11 @@ function mainLoop(){
         for(let i=0; i<numberOfRays; i++){
             if(ray[i].intersects(line)){
                 ray[i].collidedPoints.push(ray[i].intersects(line));
-                if(line.type == "endpoint"){
-                    ray[i].collidedPoints[ray[i].collidedPoints.length-1].type = "endpoint";
+                if(line.isEndpoint){
+                    ray[i].collidedPoints[ray[i].collidedPoints.length-1].isEndpoint = true;
+                }
+                else if(line.isEnemy){
+                    ray[i].collidedPoints[ray[i].collidedPoints.length-1].isEnemy = true;
                 }
             }
         }
@@ -180,13 +185,11 @@ function drawFirstPerson(color){
     for(let i=0; i<numberOfRays; i++){
         distance = distanceBetweenPoints(player, ray[i].closestPoint);
         let shade = 200/distance*10;
-        if(ray[i].closestPoint.type == "endpoint"){
+        if(ray[i].closestPoint.isEndpoint){
             color = "rgb("+"0"+", "+shade+", 0)";
         }
         else{
             color = "rgb("+shade+", "+shade+", 0)";
-            //if(shade<=30)
-                //color = "rgb("+shade+", "+shade+", "+shade+")"
         }
         if(!lightsOn)
             color = "black"
@@ -194,7 +197,12 @@ function drawFirstPerson(color){
         ctx.beginPath();
         let wallSize = 10000/distance;
         let wallWidth = 1200/numberOfRays;
-        ctx.rect(canvas.width-(1200/numberOfRays)*(i+1), 400-(wallSize/2), wallWidth, wallSize);
+        if(!ray[i].closestPoint.isEnemy){
+            ctx.rect(canvas.width-(1200/numberOfRays)*(i+1), 400-(wallSize/2), wallWidth, wallSize);
+        }
+        else{
+            ctx.drawImage(enemy.img, canvas.width-(1200/numberOfRays)*(i+1), 400-(wallSize/2), wallWidth*20, wallWidth/1.16*20);
+        }
         ctx.fill();
 
         /*wallWidth = wallSize/1.16;

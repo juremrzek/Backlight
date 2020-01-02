@@ -2,7 +2,8 @@ class Line{
     constructor(p1, p2){
         this.p1 = p1;
         this.p2 = p2;
-        this.type = ""; //if type is "", that means it's a regular wall
+        this.isEnemy = false;
+        this.isEndpoint = false;
     }
 }
 class Point{ //Point stores actual coordinates on canvas
@@ -82,7 +83,8 @@ class Ray{
         this.direction = new Point(1, 1);
         this.collidedPoints = [];
         this.closestPoint;
-        this.type = ""; //again, "" is for colliding with walls
+        this.isEndpoint = false;
+        this.isEnemy = false; //does this ray shine on enemy?
     }
     draw(){
         ctx.beginPath();

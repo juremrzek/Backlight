@@ -132,9 +132,13 @@ function drawMaze(strokeColor, fillcolor){
     if(lightsOn){
         ctx.strokeStyle = strokeColor;
         lines.forEach((line) => {
-                ctx.beginPath();
-                ctx.moveTo(line.p1.x, line.p1.y);
-                ctx.lineTo(line.p2.x, line.p2.y);
+            ctx.beginPath();
+                if(!line.isEnemy){
+                    ctx.moveTo(line.p1.x, line.p1.y);
+                    ctx.lineTo(line.p2.x, line.p2.y);
+                }
+                else
+                    ctx.drawImage(enemy.img, line.p1.x-cellwidth/2, line.p1.y-cellheight/2, cellwidth-1, cellheight-1)
                 ctx.stroke();
         });
     }
@@ -188,7 +192,7 @@ function createAnOpening(pos){ //????
         lines.push(new Line(new Point(pos.x*cellwidth, (pos.y+1)*cellheight),new Point(pos.x*cellwidth, pos.y*cellheight)));
         grid[pos.x][pos.y].hasLine[3] = false;
     }
-    lines[lines.length-1].type = "endpoint";
+    lines[lines.length-1].isEndpoint = true;
 }
 
 

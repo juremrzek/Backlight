@@ -135,15 +135,13 @@ function drawMaze(strokeColor, fillcolor){
     ctx.beginPath();
     ctx.rect(0, 0, canvas.height/2, canvas.height/2);
     ctx.fill();
-    if(lightsOn){
-        ctx.strokeStyle = strokeColor;
-        lines.forEach((line) => {
-            ctx.beginPath();
-            ctx.moveTo(line.p1.x, line.p1.y);
-            ctx.lineTo(line.p2.x, line.p2.y);
-            ctx.stroke();
-        });
-    }
+    ctx.strokeStyle = strokeColor;
+    lines.forEach((line) => {
+        ctx.beginPath();
+        ctx.moveTo(line.p1.x, line.p1.y);
+        ctx.lineTo(line.p2.x, line.p2.y);
+        ctx.stroke();
+    });
 }
 function calculateLines(){
     for(let i=0; i<grid.length-1; i++){

@@ -3,7 +3,6 @@ function gameStart(){
     ctx.fillStyle = "red";
     ray = [];
     numberOfRays = 80;
-    lightsOn = true;
     for(let i=0; i<numberOfRays; i++){
         let tempRay = new Ray(player.x, player.y);
         tempRay.collidedPoints = [];
@@ -105,16 +104,14 @@ function gameStart(){
         ctx.fill();
 
         drawPlayer("black", "white");
-        if(lightsOn)
-            drawRays("yellow");
+        drawRays("yellow");
 
         //Draw a hand with flashlight
         let flashlight = new Image();
         flashlight.src = "img/flashlight.png";
         flashlight.width = flashlight.naturalWidth*1.3;
         flashlight.height = flashlight.naturalHeight*1.3;
-        if(lightsOn)
-            ctx.drawImage(flashlight, canvas.width-flashlight.width, canvas.height - flashlight.height, flashlight.width, flashlight.height);
+        ctx.drawImage(flashlight, canvas.width-flashlight.width, canvas.height - flashlight.height, flashlight.width, flashlight.height);
 
         window.requestAnimationFrame(mainLoop);
     }
@@ -132,11 +129,7 @@ function gameStart(){
         if(key == 39)
             player.turnLeft = true;
         if(key == 37)
-            player.turnRight = true;
-        if(key == 70){
-            lightsOn = !lightsOn;
-        }
-        
+            player.turnRight = true;  
     });
     window.addEventListener("keyup", (event)=>{
         key = event.keyCode;
@@ -177,8 +170,6 @@ function drawFirstPerson(color){
         else{
             color = "rgb("+shade+", "+shade+", 0)";
         }
-        if(!lightsOn)
-            color = "black"
         
             //idkgradeimddddddddddddd
         if(distance > 40)

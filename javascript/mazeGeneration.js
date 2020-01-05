@@ -31,7 +31,7 @@ for(let i=0; i<=rownum; i++){
 startPos = randomEdgeCell();
 grid[startPos.x][startPos.y].visited = true;
 stack[0] = new Position(startPos.x, startPos.y);
-generateMaze();
+
 function generateMaze(){
     outerLoop: while(true){
         //let mazeIsGenerated = false;
@@ -59,6 +59,15 @@ function generateMaze(){
                 if(stack.length <= 0){
                     //mazeIsGenerated = true;
                     console.log("The maze has been generated");
+
+                    do{
+                        endPos = randomEdgeCell();
+                        console.log("endpos generated");
+                    }while(Math.abs(startPos.x-endPos.x)<5 || Math.abs(startPos.y-endPos.y) < 5);
+                    createAnOpening(endPos);
+                    calculateLines();
+                    gameStart();
+
                     break outerLoop;
                 }
                 ctx.moveTo(stack[stack.length-1].x*cellwidth+cellwidth/2, stack[stack.length-1].y*cellheight+cellheight/2);
@@ -76,9 +85,6 @@ function generateMaze(){
         }
     }
 }
-endPos = randomEdgeCell();
-createAnOpening(endPos);
-calculateLines();
 
 function backtrack(){
     if(hasEmptyNeighbour(stack[stack.length-1])){;
@@ -133,17 +139,13 @@ function drawMaze(strokeColor, fillcolor){
         ctx.strokeStyle = strokeColor;
         lines.forEach((line) => {
             ctx.beginPath();
-                if(!line.isEnemy){
-                    ctx.moveTo(line.p1.x, line.p1.y);
-                    ctx.lineTo(line.p2.x, line.p2.y);
-                }
-                else
-                    ctx.drawImage(enemy.img, line.p1.x-cellwidth/2, line.p1.y-cellheight/2, cellwidth-1, cellheight-1)
-                ctx.stroke();
+            ctx.moveTo(line.p1.x, line.p1.y);
+            ctx.lineTo(line.p2.x, line.p2.y);
+            ctx.stroke();
         });
     }
 }
-function calculateLines(pos){
+function calculateLines(){
     for(let i=0; i<grid.length-1; i++){
         for(let j=0; j<grid[i].length-1; j++){
             if(grid[i][j].hasLine[0])

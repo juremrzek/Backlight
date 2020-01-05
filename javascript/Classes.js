@@ -2,7 +2,6 @@ class Line{
     constructor(p1, p2){
         this.p1 = p1;
         this.p2 = p2;
-        this.isEnemy = false;
         this.isEndpoint = false;
     }
 }
@@ -84,7 +83,6 @@ class Ray{
         this.collidedPoints = [];
         this.closestPoint;
         this.isEndpoint = false;
-        this.isEnemy = false; //does this ray shine on enemy?
     }
     draw(){
         ctx.beginPath();

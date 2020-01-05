@@ -1,8 +1,11 @@
 function gameStart(){
-    player = new Player(startPos.x*cellwidth+cellwidth/2, startPos.y*cellheight+cellheight/2, 1/colnum*4, cellheight/6);
+    player = new Player(startPos.x*cellwidth+cellwidth/2, startPos.y*cellheight+cellheight/2, 1/colnum*6, cellheight/6);
     ctx.fillStyle = "red";
     ray = [];
     numberOfRays = 80;
+    pause = false;
+    pauseFlag = 0;
+    playerHasWon = false;
     for(let i=0; i<numberOfRays; i++){
         let tempRay = new Ray(player.x, player.y);
         tempRay.collidedPoints = [];
@@ -18,6 +21,8 @@ function gameStart(){
             let distance = player.distanceFrom(line);
             if(distance < player.r){
                 tempLine = line;
+                if(line.isEndpoint)
+                    playerHasWon = true;
             }
         });
         
@@ -113,15 +118,62 @@ function gameStart(){
         flashlight.height = flashlight.naturalHeight*1.3;
         ctx.drawImage(flashlight, canvas.width-flashlight.width, canvas.height - flashlight.height, flashlight.width, flashlight.height);
 
-        window.requestAnimationFrame(mainLoop);
+        if(!pause)
+            if(playerHasWon)
+                winLoop();
+            else
+                setTimeout(mainLoop, 10);
+        else{
+            pauseOptions = [];
+            pauseOptions[0] = "Resume";
+            pauseOptions[1] = "Return to menu";
+            pauseFlag = 0;
+            pauseLoop();
+        }
+            
+    }
+    function pauseLoop(){
+        ctx.clearRect(canvas.width/2-305, canvas.height/2-155, 610, 310);
+        ctx.beginPath();
+        ctx.fillStyle = "#fff200";
+        ctx.fillRect(canvas.width/2-305, canvas.height/2-155, 610, 310);
+        ctx.fillStyle = "black";
+        ctx.fillRect(canvas.width/2-300, canvas.height/2-150, 600, 300);
+        ctx.fillStyle = "white";
+        if(pauseFlag >= pauseOptions.length)
+            pauseFlag = 0;
+        if(pauseFlag < 0)
+            pauseFlag = 1;
+        for(let i=0; i<pauseOptions.length; i++){
+            if(pauseOptions[i] == pauseOptions[pauseFlag])
+                ctx.fillStyle = "#fff200";
+            else
+                ctx.fillStyle = "white";
+            ctx.fillText(pauseOptions[i],canvas.width/2-300+100, canvas.height/2-40+100*i);
+        }
+        
+        if(pause)
+            window.requestAnimationFrame(pauseLoop);
+        else
+            mainLoop();
     }
 
     window.addEventListener("keydown", (event) => {
+        if(playerHasWon)
+            if(key == 13 || key == 32)
+                location.reload();
         key = event.keyCode;
-        if(key == 87 || key == 38)
+        //console.log(key);
+        if(key == 87 || key == 38){
+            if(pause)
+                pauseFlag++;
             player.up = true;
-        if(key == 83 || key == 40)
+        }
+        if(key == 83 || key == 40){
+            if(pause)
+                pauseFlag++;
             player.down = true;
+        }
         if(key == 68)
             player.right = true;
         if(key == 65)
@@ -129,7 +181,20 @@ function gameStart(){
         if(key == 39)
             player.turnLeft = true;
         if(key == 37)
-            player.turnRight = true;  
+            player.turnRight = true;
+        if(key == 27)
+            pause = !pause;
+        if(key == 13 || key == 32){
+            switch(pauseFlag){
+                case 0:
+                    pause = false;
+                    break;
+                case 1:
+                    location.reload();
+                    break;
+            }
+            
+        }
     });
     window.addEventListener("keyup", (event)=>{
         key = event.keyCode;
@@ -168,12 +233,11 @@ function drawFirstPerson(color){
             color = "rgb("+"0"+", "+shade+", 0)";
         }
         else{
-            color = "rgb("+shade+", "+shade+", 0)";
+          if(distance > 40)
+              color = "rgb("+shade+", "+shade+", "+shade+")";
+          else
+              color = "rgb("+shade+", "+shade+", 0)";
         }
-        
-            //idkgradeimddddddddddddd
-        if(distance > 40)
-                color = "rgb("+shade+", "+shade+", "+shade+")";
         ctx.fillStyle = color;
         ctx.beginPath();
         let wallSize = 10000/distance;
@@ -201,4 +265,18 @@ function drawRays(color){
         ctx.lineTo(ray[i].closestPoint.x, ray[i].closestPoint.y);
         ctx.stroke();
     }
+}
+function winLoop(){
+    ctx.fillStyle = "white";
+    ctx.font = "100px Arial";
+    ctx.clearRect(canvas.width/2-305, canvas.height/2-205, 610, 410);
+    ctx.beginPath();
+    ctx.fillStyle = "#fff200";
+    ctx.fillRect(canvas.width/2-305, canvas.height/2-205, 610, 410);
+    ctx.fillStyle = "black";
+    ctx.fillRect(canvas.width/2-300, canvas.height/2-200, 600, 400);
+    ctx.fillStyle = "white";
+    ctx.fillText("You won!", canvas.width/2-200, canvas.height/3+100);
+    ctx.font = "30px Arial";
+    ctx.fillText("Press enter or space to continue", canvas.width/2-200, canvas.height/3+200);
 }

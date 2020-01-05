@@ -57,7 +57,7 @@ function generateMaze(){
                 ctx.stroke();
                 backtrack();
                 if(stack.length <= 0){
-                    //mazeIsGenerated = true;
+                    mazeIsGenerated = true;
                     console.log("The maze has been generated");
 
                     do{

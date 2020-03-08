@@ -1,6 +1,19 @@
 function gameStart(){
-    player = new Player(startPos.x*cellwidth+cellwidth/2, startPos.y*cellheight+cellheight/2, 1/colnum*6, cellheight/6);
-    ctx.fillStyle = "red";
+    player = new Player(startPos.x*cellwidth+cellwidth/2, startPos.y*cellheight+cellheight/2, 1/colnum*12, cellheight/6);
+    score = 0;
+    boxSize = 8;
+    numberOfBoxes = 20;
+    boxes = [];
+    for(let i=0; i<numberOfBoxes; i++){
+        let randomXCell = Math.trunc(Math.random()*colnum);
+        let randomYCell = Math.trunc(Math.random()*colnum);
+        let offset = 2;
+        boxes.push(new Box(randomXCell*cellheight+offset,randomYCell*cellheight+offset,boxSize,i));
+    }
+    for(let i=0; i<boxes.length; i++){
+        boxes[i].setLines();
+    }
+
     ray = [];
     numberOfRays = 80;
     pause = false;
@@ -17,37 +30,47 @@ function gameStart(){
         player.direction.x = 0;
         player.direction.y = 0;
         let tempLine = new Line();
-        lines.forEach((line)=>{
+        for(let i=0; i<lines.length; i++){ //collisions with walls
+            let line = lines[i];
             let distance = player.distanceFrom(line);
             if(distance < player.r){
-                tempLine = line;
-                if(line.isEndpoint)
+                if(line.type == "box"){
+                    for(let j=lines.length-1; j>=0; j--){
+                        if(line.boxNum == lines[j].boxNum){
+                            lines.splice(j, 1);
+                        }
+                    }
+                    boxes[line.boxNum].isVisible = false;
+                    score += 20;
+                }
+                if(line.type == "endpoint")
                     playerHasWon = true;
+                tempLine = line;
             }
-        });
+        };
         
         if(player.turnLeft)
-            player.angle -= 2;
+            player.angle -= 4;
         if(player.turnRight)
-            player.angle += 2;
+            player.angle += 4;
         if(player.angle >= 360)
             player.angle = 0;
 
         if(player.up){
-            player.direction.y += -Math.sin(toRadians(player.angle));
+            player.direction.y -= Math.sin(toRadians(player.angle));
             player.direction.x += Math.cos(toRadians(player.angle));
         }
         if(player.down){
             player.direction.y += Math.sin(toRadians(player.angle));
-            player.direction.x += -Math.cos(toRadians(player.angle));
+            player.direction.x -= Math.cos(toRadians(player.angle));
         }
         if(player.left){
-            player.direction.y += -Math.sin(toRadians(player.angle+90));
+            player.direction.y -= Math.sin(toRadians(player.angle+90));
             player.direction.x += Math.cos(toRadians(player.angle+90));
         }
         if(player.right){
             player.direction.y += Math.sin(toRadians(player.angle+90));
-            player.direction.x += -Math.cos(toRadians(player.angle+90));
+            player.direction.x -= Math.cos(toRadians(player.angle+90));
         }
         if(player.direction.y < -1)
             player.direction.y += 1;
@@ -61,10 +84,13 @@ function gameStart(){
         }
         lines.forEach((line)=>{
             for(let i=0; i<numberOfRays; i++){
-                if(ray[i].intersects(line)){
-                    ray[i].collidedPoints.push(ray[i].intersects(line));
-                    if(line.isEndpoint){
-                        ray[i].collidedPoints[ray[i].collidedPoints.length-1].isEndpoint = true;
+                if(ray[i].intersectsLine(line)){
+                    ray[i].collidedPoints.push(ray[i].intersectsLine(line));
+                    if(line.type == "endpoint"){
+                        ray[i].collidedPoints[ray[i].collidedPoints.length-1].type = "endpoint";
+                    }
+                    if(line.type == "box"){
+                        ray[i].collidedPoints[ray[i].collidedPoints.length-1].type = "box";
                     }
                 }
             }
@@ -92,24 +118,9 @@ function gameStart(){
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.beginPath();
         
-        //Create a floor gradient
-        let gradient = ctx.createLinearGradient(0, canvas.height/2, 0, canvas.height*2);
-        gradient.addColorStop(0, "black");
-        gradient.addColorStop(0.1, "#0c0c0c");
-        gradient.addColorStop(1, "yellow");
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, canvas.height/2, canvas.width, canvas.height/2);
-
+        drawFloor();
         drawFirstPerson(mazeColor);
-        drawMaze(mazeColor, "black");
-
-        ctx.beginPath();
-        ctx.fillStyle = "green";
-        ctx.rect(endPos.x*cellwidth, endPos.y*cellheight, cellwidth, cellheight);
-        ctx.fill();
-
-        drawPlayer("black", "white");
-        drawRays("yellow");
+        drawMap();
 
         //Draw a hand with flashlight
         let flashlight = new Image();
@@ -130,7 +141,7 @@ function gameStart(){
             pauseFlag = 0;
             pauseLoop();
         }
-            
+        writeScore();
     }
     function pauseLoop(){
         ctx.clearRect(canvas.width/2-305, canvas.height/2-155, 610, 310);
@@ -228,15 +239,16 @@ function distanceBetweenPoints(p1, p2){
 function drawFirstPerson(color){
     for(let i=0; i<numberOfRays; i++){
         distance = distanceBetweenPoints(player, ray[i].closestPoint);
-        let shade = 200/distance*10;
-        if(ray[i].closestPoint.isEndpoint){
+        let shade = -Math.sqrt(distance*200)+190;
+        if(ray[i].closestPoint.type == "endpoint"){
             color = "rgb("+"0"+", "+shade+", 0)";
         }
+        else if(ray[i].closestPoint.type == "box"){
+            color = "rgb(0, 0, "+shade+")";
+        }
+        
         else{
-          if(distance > 40)
-              color = "rgb("+shade+", "+shade+", "+shade+")";
-          else
-              color = "rgb("+shade+", "+shade+", 0)";
+            color = "rgb("+shade+", "+shade+", "+shade+")";
         }
         ctx.fillStyle = color;
         ctx.beginPath();
@@ -279,4 +291,36 @@ function winLoop(){
     ctx.fillText("You won!", canvas.width/2-200, canvas.height/3+100);
     ctx.font = "30px Arial";
     ctx.fillText("Press enter or space to continue", canvas.width/2-200, canvas.height/3+200);
+}
+function writeScore(){
+    ctx.fillStyle = "black";
+    ctx.rect(900, 0, 1300, 100);
+    ctx.fill();
+    ctx.fillStyle = "white";
+    ctx.font = "40px Arial";
+    ctx.fillText("Score: "+Math.floor(score), 910, 60);
+}
+function drawFloor(){
+     //Create a floor gradient
+     let gradient = ctx.createLinearGradient(0, canvas.height/2, 0, canvas.height*2);
+     gradient.addColorStop(0, "black");
+     gradient.addColorStop(0.9, "white");
+     ctx.fillStyle = gradient;
+     ctx.fillRect(0, canvas.height/2, canvas.width, canvas.height/2);
+}
+function drawMap(){
+    drawMaze(mazeColor, "black");
+    ctx.beginPath();
+    ctx.fillStyle = "green";
+    ctx.rect(endPos.x*cellwidth, endPos.y*cellheight, cellwidth, cellheight);
+    ctx.fill();
+    drawPlayer("black", "white");
+    drawRays("yellow");
+    for(let i=0; i<boxes.length; i++){
+        if(boxes[i].isVisible){
+            ctx.beginPath();
+            ctx.fillStyle = "blue";
+            ctx.fillRect(boxes[i].x, boxes[i].y, boxSize, boxSize);
+        }
+    }
 }

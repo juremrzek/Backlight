@@ -2,7 +2,8 @@ class Line{
     constructor(p1, p2){
         this.p1 = p1;
         this.p2 = p2;
-        this.isEndpoint = false;
+        this.type = "";
+        this.boxNum; //each box consists of 4 lines
     }
 }
 class Point{ //Point stores actual coordinates on canvas
@@ -90,7 +91,7 @@ class Ray{
         ctx.lineTo(this.position.x + this.direction.x*10, this.position.y + this.direction.y*10);
         ctx.stroke();
     }
-    intersects(line){
+    intersectsLine(line){
         const x1 = line.p1.x;
         const y1 = line.p1.y;
         const x2 = line.p2.x;
@@ -121,17 +122,31 @@ class Ray{
         this.direction.y = y - this.position.y;
     }
 }
-class Enemy{
-    constructor(x,y,width){
+class Box{
+    constructor(x,y,width,boxNum){
         this.x = x;
-        this.y = y;
-        //this.img 
-        this.img = new Image();
-        this.time = 0; //so we know when to switch frames to animate
+        this.y = y; 
         this.width = width;
+        this.lineIndexes = [];
+        this.boxNum = boxNum;
+        this.isVisible = true;
     }
-    setImg(imgsrc){
-        this.imgsrc = imgsrc
-        this.img.src = imgsrc;
+    setLines(){
+        lines.push(new Line(new Point(this.x, this.y), new Point(this.x+this.width, this.y)));
+        lines[lines.length-1].type = "box";
+        lines[lines.length-1].boxNum = this.boxNum;
+        this.lineIndexes.push(lines.length-1);
+        lines.push(new Line(new Point(this.x+this.width, this.y), new Point(this.x+this.width, this.y+this.width)));
+        lines[lines.length-1].type = "box";
+        lines[lines.length-1].boxNum = this.boxNum;
+        this.lineIndexes.push(lines.length-1);
+        lines.push(new Line(new Point(this.x+this.width, this.y+this.width), new Point(this.x, this.y+this.width)));
+        lines[lines.length-1].type = "box";
+        lines[lines.length-1].boxNum = this.boxNum;
+        this.lineIndexes.push(lines.length-1);
+        lines.push(new Line(new Point(this.x, this.y+this.width), new Point(this.x, this.y)));
+        lines[lines.length-1].type = "box";
+        lines[lines.length-1].boxNum = this.boxNum;
+        this.lineIndexes.push(lines.length-1);
     }
 }

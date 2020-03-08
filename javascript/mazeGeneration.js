@@ -28,7 +28,7 @@ for(let i=0; i<=rownum; i++){
         }
     }
 }
-startPos = randomEdgeCell();
+startPos = getRandomEdgeCell();
 grid[startPos.x][startPos.y].visited = true;
 stack[0] = new Position(startPos.x, startPos.y);
 
@@ -61,10 +61,10 @@ function generateMaze(){
                     console.log("The maze has been generated");
 
                     do{
-                        endPos = randomEdgeCell();
+                        endPos = getRandomEdgeCell();
                         console.log("endpos generated");
                     }while(Math.abs(startPos.x-endPos.x)<5 || Math.abs(startPos.y-endPos.y) < 5);
-                    createAnOpening(endPos);
+                    setEndpoint(endPos);
                     calculateLines();
                     gameStart();
 
@@ -137,10 +137,12 @@ function drawMaze(strokeColor, fillcolor){
     ctx.fill();
     ctx.strokeStyle = strokeColor;
     lines.forEach((line) => {
-        ctx.beginPath();
-        ctx.moveTo(line.p1.x, line.p1.y);
-        ctx.lineTo(line.p2.x, line.p2.y);
-        ctx.stroke();
+        if(line.type != "box"){
+            ctx.beginPath();
+            ctx.moveTo(line.p1.x, line.p1.y);
+            ctx.lineTo(line.p2.x, line.p2.y);
+            ctx.stroke();
+        }
     });
 }
 function calculateLines(){
@@ -157,7 +159,7 @@ function calculateLines(){
         }
     }
 }
-function randomEdgeCell(){
+function getRandomEdgeCell(){
     let pos = new Position();
     switch(Math.trunc(Math.random()*2)){
         case 0: //That means we start on top or on bottom
@@ -175,7 +177,7 @@ function randomEdgeCell(){
     }
     return pos;
 }
-function createAnOpening(pos){ //????
+function setEndpoint(pos){
     if(pos.y == 0){
         grid[pos.x][pos.y].hasLine[0] = false;
         lines.push(new Line(new Point(pos.x*cellwidth,pos.y*cellheight),new Point((pos.x+1)*cellwidth, pos.y*cellheight)));
@@ -192,7 +194,6 @@ function createAnOpening(pos){ //????
         lines.push(new Line(new Point(pos.x*cellwidth, (pos.y+1)*cellheight),new Point(pos.x*cellwidth, pos.y*cellheight)));
         grid[pos.x][pos.y].hasLine[3] = false;
     }
-    lines[lines.length-1].isEndpoint = true;
+    lines[lines.length-1].type = "endpoint";
 }
-
 

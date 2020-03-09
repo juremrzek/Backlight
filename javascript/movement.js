@@ -1,5 +1,5 @@
 function gameStart(){
-    player = new Player(startPos.x*cellwidth+cellwidth/2, startPos.y*cellheight+cellheight/2, 1/colnum*12, cellheight/6);
+    player = new Player(startPos.x*cellwidth+cellwidth/2, startPos.y*cellheight+cellheight/2, 1/colnum*12, cellheight/6, 4);
     score = 0;
     boxSize = 8;
     numberOfBoxes = 20;
@@ -25,12 +25,13 @@ function gameStart(){
         ray.push(tempRay);
     }
     previousPlayerPoint = new Point(player.x, player.y);
+    let originalDate = new Date();
     mainLoop();
     function mainLoop(){
         player.direction.x = 0;
         player.direction.y = 0;
         let tempLine = new Line();
-        for(let i=0; i<lines.length; i++){ //collisions with walls
+        for(let i=0; i<lines.length; i++){ //collisions with wall
             let line = lines[i];
             let distance = player.distanceFrom(line);
             if(distance < player.r){
@@ -50,9 +51,9 @@ function gameStart(){
         };
         
         if(player.turnLeft)
-            player.angle -= 4;
+            player.angle -= player.rotateSpeed;
         if(player.turnRight)
-            player.angle += 4;
+            player.angle += player.rotateSpeed;
         if(player.angle >= 360)
             player.angle = 0;
 
@@ -141,7 +142,22 @@ function gameStart(){
             pauseFlag = 0;
             pauseLoop();
         }
-        writeScore();
+        //writeScore();
+        
+        let now = new Date();
+        // Find the distance between now and the count down date
+        let timeDifference = now-originalDate
+        let seconds = Math.trunc(timeDifference/1000);
+        let minutes = Math.trunc(seconds/60);
+        let showedSeconds = seconds - minutes*60;
+        
+        ctx.fillStyle = "black";
+        ctx.rect(800, 0, 1300, 100);
+        ctx.fill();
+        ctx.fillStyle = "white";
+        ctx.font = "40px Arial";
+        ctx.fillText("Time: "+minutes + " min " + showedSeconds+" sec", 810, 60);
+
     }
     function pauseLoop(){
         ctx.clearRect(canvas.width/2-305, canvas.height/2-155, 610, 310);

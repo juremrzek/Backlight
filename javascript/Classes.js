@@ -19,12 +19,13 @@ class Position{ //Position stores just the position on the grid (x - from 0 to n
     }
 }
 class Player{
-    constructor(x, y, speed, r){
+    constructor(x, y, speed, r, rotateSpeed){
         this.x = x;
         this.y = y;
         this.speed = speed;
         this.direction = new Point(0,0);
         this.r = r;
+        this.rotateSpeed = rotateSpeed;
         this.right = false;
         this.left = false;
         this.up = false;

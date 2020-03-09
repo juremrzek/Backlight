@@ -12,7 +12,6 @@ let startPos = new Position();
 let endPos = new Position();
 let grid = []; //2d array that stores info about cells in the grid.
 let stack = []; //with this we remember all points we've been to
-
 let lines = []; //to know where the lines are for later collisions
 
 //First we set all 

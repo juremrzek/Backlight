@@ -1,14 +1,26 @@
 function gameStart(){
-    player = new Player(startPos.x*cellwidth+cellwidth/2, startPos.y*cellheight+cellheight/2, 1/colnum*12, cellheight/6, 4);
-    score = 0;
+    player = new Player(startPos.x*cellwidth+cellwidth/2, startPos.y*cellheight+cellheight/2, 1/colnum*8, cellheight/6, 4);
+    boxesCollected = 0;
     boxSize = 8;
     numberOfBoxes = 20;
     boxes = [];
-    for(let i=0; i<numberOfBoxes; i++){
+    boxColor = "#4343c3";
+    let boxOffset = 2;
+    score = 0; //gets calculated at the end
+    let i=0;
+    isMapped = false;
+    mappedCount = 0; //how many times did the player open map?
+    let mapDate; //so we know when to close the map
+    boxLoop: while(i<numberOfBoxes){
         let randomXCell = Math.trunc(Math.random()*colnum);
         let randomYCell = Math.trunc(Math.random()*colnum);
-        let offset = 2;
-        boxes.push(new Box(randomXCell*cellheight+offset,randomYCell*cellheight+offset,boxSize,i));
+        for(let j=0; j<i; j++){
+            if(randomXCell*cellheight+boxOffset==boxes[j].x && randomYCell*cellheight+boxOffset==boxes[j].y){
+                continue boxLoop;
+            }
+        }
+        boxes.push(new Box(randomXCell*cellheight+boxOffset,randomYCell*cellheight+boxOffset,boxSize,i));
+        i++;
     }
     for(let i=0; i<boxes.length; i++){
         boxes[i].setLines();
@@ -26,8 +38,8 @@ function gameStart(){
     }
     previousPlayerPoint = new Point(player.x, player.y);
     let originalDate = new Date();
-    let seconds = 0;
-    let minutes = 0;
+    seconds = 0;
+    minutes = 0;
     mainLoop();
     function mainLoop(){
         player.direction.x = 0;
@@ -44,10 +56,11 @@ function gameStart(){
                         }
                     }
                     boxes[line.boxNum].isVisible = false;
-                    score += 20;
+                    boxesCollected += 1;
                 }
-                if(line.type == "endpoint")
+                if(line.type == "endpoint"){
                     playerHasWon = true;
+                }
                 tempLine = line;
             }
         };
@@ -118,19 +131,7 @@ function gameStart(){
         
 
         //Draw everything
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.beginPath();
-        
-        drawFloor();
-        drawFirstPerson(mazeColor);
-        drawMap();
-
-        //Draw a hand with flashlight
-        let flashlight = new Image();
-        flashlight.src = "img/flashlight.png";
-        flashlight.width = flashlight.naturalWidth*1.3;
-        flashlight.height = flashlight.naturalHeight*1.3;
-        ctx.drawImage(flashlight, canvas.width-flashlight.width, canvas.height - flashlight.height, flashlight.width, flashlight.height);
+        drawCanvas();
 
         if(!pause)
             if(playerHasWon)
@@ -157,14 +158,16 @@ function gameStart(){
             minutes++;
             seconds = 0;
         }
+        if((now-mapDate)/1000>=2)
+            isMapped = false;
         
         ctx.fillStyle = "black";
-        ctx.rect(800, 0, 1300, 100);
+        ctx.rect(750, 0, 1300, 160);
         ctx.fill();
         ctx.fillStyle = "white";
-        ctx.font = "40px Arial";
-        ctx.fillText("Time: "+minutes + " min " + seconds+" sec", 810, 60);
-
+        ctx.font = "40px Audiowide";
+        ctx.fillText("Time: "+minutes + " min " + seconds+" sec", 760, 60);
+        ctx.fillText("Boxes collected: "+boxesCollected, 760, 130);
     }
     function pauseLoop(){
         ctx.clearRect(canvas.width/2-305, canvas.height/2-155, 610, 310);
@@ -183,7 +186,8 @@ function gameStart(){
                 ctx.fillStyle = "#fff200";
             else
                 ctx.fillStyle = "white";
-            ctx.fillText(pauseOptions[i],canvas.width/2-300+100, canvas.height/2-40+100*i);
+            ctx.font = "50px Audiowide";
+            ctx.fillText(pauseOptions[i],canvas.width/2-300+85, canvas.height/2-40+100*i);
         }
         
         if(pause)
@@ -193,10 +197,10 @@ function gameStart(){
     }
 
     window.addEventListener("keydown", (event) => {
+        key = event.keyCode;
         if(playerHasWon)
             if(key == 13 || key == 32)
                 location.reload();
-        key = event.keyCode;
         //console.log(key);
         if(key == 87 || key == 38){
             if(pause)
@@ -216,8 +220,11 @@ function gameStart(){
             player.turnLeft = true;
         if(key == 37)
             player.turnRight = true;
-        if(key == 27)
+        if(key == 27){
+            isMapped = false;
             pause = !pause;
+            drawCanvas();
+        }
         if(key == 13 || key == 32){
             switch(pauseFlag){
                 case 0:
@@ -228,6 +235,11 @@ function gameStart(){
                     break;
             }
             
+        }
+        if(key == 77){ //M
+            isMapped = true;
+            mappedCount++;
+            mapDate = new Date();
         }
     });
     window.addEventListener("keyup", (event)=>{
@@ -267,7 +279,9 @@ function drawFirstPerson(color){
             color = "rgb("+"0"+", "+shade+", 0)";
         }
         else if(ray[i].closestPoint.type == "box"){
-            color = "rgb(0, 0, "+shade+")";
+            //color = "rgb(0, 0, "+shade+")";
+            //color = "rgb(0,"+shade+", "+shade/2+")";
+            color = "rgb("+shade/3+", "+shade/3+", "+shade+")";
         }
         
         else{
@@ -302,26 +316,21 @@ function drawRays(color){
     }
 }
 function winLoop(){
+    score = Math.trunc(8000+12000/(minutes*60+seconds)+boxesCollected*100-mappedCount*200);
     ctx.fillStyle = "white";
-    ctx.font = "100px Arial";
-    ctx.clearRect(canvas.width/2-305, canvas.height/2-205, 610, 410);
+    ctx.font = "80px Audiowide";
+    ctx.clearRect(canvas.width/2-325, canvas.height/2-205, 650, 460);
     ctx.beginPath();
     ctx.fillStyle = "#fff200";
-    ctx.fillRect(canvas.width/2-305, canvas.height/2-205, 610, 410);
+    ctx.fillRect(canvas.width/2-325, canvas.height/2-205, 650, 460);
     ctx.fillStyle = "black";
-    ctx.fillRect(canvas.width/2-300, canvas.height/2-200, 600, 400);
+    ctx.fillRect(canvas.width/2-320, canvas.height/2-200, 640, 450);
     ctx.fillStyle = "white";
-    ctx.fillText("You won!", canvas.width/2-200, canvas.height/3+100);
-    ctx.font = "30px Arial";
-    ctx.fillText("Press enter or space to continue", canvas.width/2-200, canvas.height/3+200);
-}
-function writeScore(){
-    ctx.fillStyle = "black";
-    ctx.rect(900, 0, 1300, 100);
-    ctx.fill();
-    ctx.fillStyle = "white";
-    ctx.font = "40px Arial";
-    ctx.fillText("Score: "+Math.floor(score), 910, 60);
+    ctx.fillText("You won!", canvas.width/2-200, canvas.height/3+50);
+    ctx.font = "40px Audiowide";
+    ctx.fillText("You gained "+score+" points!", canvas.width/2-270, canvas.height/3+180);
+    ctx.font = "30px Audiowide";
+    ctx.fillText("Press enter or space to continue", canvas.width/2-270, canvas.height/3+300);
 }
 function drawFloor(){
      //Create a floor gradient
@@ -342,8 +351,25 @@ function drawMap(){
     for(let i=0; i<boxes.length; i++){
         if(boxes[i].isVisible){
             ctx.beginPath();
-            ctx.fillStyle = "blue";
+            ctx.fillStyle = boxColor;
             ctx.fillRect(boxes[i].x, boxes[i].y, boxSize, boxSize);
         }
     }
+}
+function drawCanvas(){
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.beginPath();
+        
+        drawFloor();
+        drawFirstPerson(mazeColor);
+        if(isMapped)
+            drawMap();
+        ctx.beginPath();
+            
+        //Draw a hand with flashlight
+        let flashlight = new Image();
+        flashlight.src = "img/flashlight.png";
+        flashlight.width = flashlight.naturalWidth*1.3;
+        flashlight.height = flashlight.naturalHeight*1.3;
+        ctx.drawImage(flashlight, canvas.width-flashlight.width, canvas.height - flashlight.height, flashlight.width, flashlight.height);
 }

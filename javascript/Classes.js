@@ -151,3 +151,15 @@ class Box{
         this.lineIndexes.push(lines.length-1);
     }
 }
+function helpOptionMenu(){
+    swal({
+        title:"Help",
+        text:"Move the player by pressing WASD keys. Use the left and right arrow key to turn around. To finish the game, you must get to to the finish line. Collect blue boxes on your way! If you get lost you can press M, but be careful as you will get lower score!"
+    })
+}
+function creditsOptionMenu(){
+    swal({
+        title:"About",
+        text:"Program made by Jure Mržek. It randomly generates a maze using backtracking algorithm, then projects a first-person view by casting rays in front of the player. This method is called raycasting and is also known as 2.5 dimensional projection"
+    })
+}

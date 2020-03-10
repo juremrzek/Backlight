@@ -32,6 +32,9 @@ grid[startPos.x][startPos.y].visited = true;
 stack[0] = new Position(startPos.x, startPos.y);
 
 function generateMaze(){
+    canvas.style.zIndex="6";
+    let moonImg = document.getElementById("moonImg");
+    moonImg.style.visibility="hidden";
     outerLoop: while(true){
         //let mazeIsGenerated = false;
         while(true){

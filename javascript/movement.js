@@ -26,6 +26,8 @@ function gameStart(){
     }
     previousPlayerPoint = new Point(player.x, player.y);
     let originalDate = new Date();
+    let seconds = 0;
+    let minutes = 0;
     mainLoop();
     function mainLoop(){
         player.direction.x = 0;
@@ -147,16 +149,21 @@ function gameStart(){
         let now = new Date();
         // Find the distance between now and the count down date
         let timeDifference = now-originalDate
-        let seconds = Math.trunc(timeDifference/1000);
-        let minutes = Math.trunc(seconds/60);
-        let showedSeconds = seconds - minutes*60;
+        if(Math.trunc(timeDifference/1000)>=1){
+            seconds++;
+            originalDate = new Date();
+        }
+        if(seconds >= 60){
+            minutes++;
+            seconds = 0;
+        }
         
         ctx.fillStyle = "black";
         ctx.rect(800, 0, 1300, 100);
         ctx.fill();
         ctx.fillStyle = "white";
         ctx.font = "40px Arial";
-        ctx.fillText("Time: "+minutes + " min " + showedSeconds+" sec", 810, 60);
+        ctx.fillText("Time: "+minutes + " min " + seconds+" sec", 810, 60);
 
     }
     function pauseLoop(){

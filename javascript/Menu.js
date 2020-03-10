@@ -5,7 +5,7 @@ options[1] = "How to play";
 options[2] = "About";
 let menu = true;
 ctx.fillStyle = "white";
-ctx.font = "60px Arial";
+ctx.font = "60px Roboto";
 drawMenu();
 function drawMenu(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);

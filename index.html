@@ -6,13 +6,33 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/x-icon" href="favicon.ico"/>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Audiowide&display=swap" rel="stylesheet">
     <title>Backlight</title>
 </head>
 <body>
+
+    <!--source: https://freefrontend.com/css-animated-backgrounds/-->
+    <div class="background-container">
+        <img id="moonImg" src="img/moon.png" alt="">
+    <div class="stars"></div>
+    <div class="twinkling"></div>
+    <div class="clouds"></div>
+    <!---->
+
+
     <canvas id="canvas"> </canvas>
+    <div id="menu">
+        <p id="title">Backlight</p>
+        <div class="button" onclick="generateMaze()">Play</div>
+        <div class="button">Help</div>
+        <div class="button">Credits</div>
+    </div>
+
+
     <script src="javascript/Classes.js"></script>
     <script src="javascript/movement.js"></script>
     <script src="javascript/mazeGeneration.js"></script>
-    <script src="javascript/Menu.js"></script>
+    <!--<script src="javascript/Menu.js"></script>-->
 </body>
 </html>
